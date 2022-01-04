@@ -3,6 +3,7 @@ package com.example.barcodepmp;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -13,8 +14,18 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public class MainActivity extends AppCompatActivity {
     Button startButton;
+    Button btnChk;
 
     private final static int CAMERA_PERMISSIONS_GRANTED = 100;
 
@@ -27,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         result.setText(intetnt.getStringExtra("result"));
 
         startButton = (Button)findViewById(R.id.startButton);   // Button Boilerplate
+        btnChk = (Button) findViewById(R.id.btnChk);
 
         getCameraPermission();
 
@@ -40,6 +52,43 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent goNextActivity = new Intent(getApplicationContext(), QRCodeScan.class);
                 startActivity(goNextActivity);
+            }
+        });
+
+        btnChk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String result = null;
+                new Thread() {
+                    public void run() {
+                try {
+                    // Open the connection
+                    URL url = new URL("http://172.30.1.30:8080/aa");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    InputStream is = conn.getInputStream();
+
+                    // Get the stream
+                    StringBuilder builder = new StringBuilder();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        builder.append(line);
+                    }
+
+                    // Set the result
+//                    result = builder.toString();
+                    System.out.println("접속중");
+                }
+                catch (Exception e) {
+                    // Error calling the rest api
+                    Log.e("REST_API", "GET method failed: " + e.getMessage());
+                    e.printStackTrace();
+                }
+                    }
+                }.start();
+
             }
         });
 
@@ -64,4 +113,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
 }
